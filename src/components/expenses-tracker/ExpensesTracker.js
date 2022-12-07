@@ -1,20 +1,22 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import "./ExpnensesTracker.css"
 export const ExpensesTracker = () => {
 
   
 	const initialState = {
+		srNo: 0,
 		name: "",
 		amount: "",
 		catagory: "",
 	}
   const [initialiseValue,setInitialiseValue] =useState(initialState)
-  const [ExpenseList,setExpenseList]=useState([])
+  const [expenseList,setexpenseList]=useState([])
+  const [num, setnum] = useState(0)
   const [colourPercent,setColourPercent]=useState({
-    lightblue:25,
-    red:25,
-    lightgreen:25,
-    orange:25
+    lightblue:100,
+    red:100,
+    lightgreen:100,
+    orange:100
 
   })
   const [expenses, setExpenses] = useState({
@@ -28,51 +30,102 @@ export const ExpensesTracker = () => {
 
   const validateData=(e)=>{
     e.preventDefault()
-    console.log(initialiseValue)
-    if(initialiseValue.name===""){
+    //console.log(initialiseValue)
+    if(initialiseValue?.name===""){
       alert('Expense Name required')
     }
-    else if(initialiseValue.amount==="" || parseInt(initialiseValue.amount)<0){
-      alert("Expense Amount required and should be greater than 0 ")
+     if(initialiseValue?.amount==="" || parseInt(initialiseValue?.amount)<=0){
+      alert("Expense Amount required and should be greater than 0")
     }
-    else if(initialiseValue.catagory===""){
+     if(initialiseValue?.catagory===""){
       alert("Please Choose Expense Type")
     }
     else{ 
-    setExpenseList((prev)=>([...prev, initialiseValue ]))
-    setTotalExpenses((prev)=>{
-      return prev + parseInt(initialiseValue.amount)})
+    setexpenseList((prev)=>{
+		
+		return[...prev, initialiseValue]
+	})
+    
 
-	  setExpenses((prev)=>{
-		return {
-			food: prev.food,
-            Travel:prev.Travel,
-            Shopping:prev.Shopping,
-            Other:prev.Other,
-            [initialiseValue.catagory]:prev[initialiseValue.catagory]+initialiseValue.amount
+	//   setExpenses((prev)=>{
+
+	// 	return {
+	// 		food: prev.food,
+    //         Travel:prev.Travel,
+    //         Shopping:prev.Shopping,
+    //         Other:prev.Other,
+    //         [initialiseValue.catagory]:prev[initialiseValue.catagory]+initialiseValue.amount
+	// 	}
+	//   })
+       
+  }
+  }
+  const percentFn = ()=>{
+	expenseList.map((value, id)=>{
+		setTotalExpenses((prev)=>{
+			return prev + Number(value.amount)})
+		if(value.catagory === "Food"){
+			const obj = {[value.catagory]: expenses.food + value.amount}
+			setExpenses((prev)=>{
+
+				return {
+					...prev,
+					...obj
+				}
+			  })
+		} else if(value.catagory === "Travel"){
+			
+			setExpenses((prev)=>{
+				const obj = {[value.catagory]:expenses.Travel + value.amount}
+				return {
+					...prev,
+					...obj
+				}
+			  })
+		}else if(value.catagory === "Shopping"){
+			const obj = {[value.catagory]: expenses.Shopping+ value.amount}
+			setExpenses((prev)=>{
+
+				return {
+					...prev,
+					...obj
+				}
+			  })
+		}else if(value.catagory === "Other"){
+			const obj = {[value.catagory]: expenses.Other + value.amount}
+			setExpenses((prev)=>{
+
+				return {
+					...prev,
+					...obj
+				}
+			  })
 		}
-	  })
-       setColourPercent({
-	lightblue:expenses.food/totalExpenses*100,
-red:expenses.Travel/totalExpenses*100,
-lightgreen:expenses.Shopping/totalExpenses*100,
-orange:expenses.Other/totalExpenses*100
-})
-  }
+		setColourPercent({
+			lightblue:Math.floor(expenses.food/totalExpenses*100),
+		red:Math.floor(expenses.Travel/totalExpenses*100),
+		lightgreen:Math.floor(expenses.Shopping/totalExpenses*100),
+		orange:Math.floor(expenses.Other/totalExpenses*100)
+		})
+	})
   }
 
-
+useEffect(()=>{
+	percentFn()
+	// setnum(initialiseValue.srNo + 1)
+},[expenseList])
 
   const onChangeHandler=(e)=>{
     e.persist()
     setInitialiseValue((prev)=>{
       return {
         ...prev,
-      [e.target.name]:e.target.value
+      [e.target.name]:e.target.value,
+	  srNo: num
       }
     })
   }
-
+console.log({colourPercent})
 	return (
 		<div className="mt-50 layout-column justify-content-center align-items-center" >
 			<div>
@@ -129,36 +182,15 @@ orange:expenses.Other/totalExpenses*100
 							</tr>
 						</thead>
 						<tbody>
-              {ExpenseList.map((val,id)=>{
-                return(
-                  <>
-                  <tr>
-								<td>{id+1}</td>
+              {expenseList.map((val,id)=>{
+                return(<tr key={id} data-testid={`expense-list-${id}`}>
+								<td>{val.srNo}</td>
 								<td>{val.name}</td>
 								<td>{val.amount}</td>
 								<td>{val.catagory}</td>
 							</tr>
-                  </>
                 )
-              })}
-							{/* <tr>
-								<td>2</td>
-								<td>Expense 2</td>
-								<td>10</td>
-								<td>Travel</td>
-							</tr>
-							<tr>
-								<td>3</td>
-								<td>Expense 3</td>
-								<td>10</td>
-								<td>Shopping</td>
-							</tr>
-							<tr>
-								<td>4</td>
-								<td>Expense 4</td>
-								<td>10</td>
-								<td>Other</td>
-							</tr> */}
+              })}		
 					</tbody>
 				</table>
 			</div>
@@ -166,10 +198,10 @@ orange:expenses.Other/totalExpenses*100
 				<p className="title">Expenses Breakdown</p>
 				<br />
 				<div style={{ height: '30px', display: 'flex' }}>
-					<div data-testid="expense-distribution-food" style={ExpenseList.length==0?{width:"25%"}:{ width:`${Math.floor(expenses.food/totalExpenses*100)}%`  }} className="lightblue"></div>
-					<div data-testid="expense-distribution-travel" style={ExpenseList.length==0?{width:"25%"}:{ width:`${Math.floor(expenses.Travel/totalExpenses*100)}%`}} className="red"></div>
-					<div data-testid="expense-distribution-shopping" style={ExpenseList.length==0?{width:"25%"}:{ width:  `${Math.floor(expenses.Shopping/totalExpenses*100)}%` }} className="lightgreen"></div>
-					<div data-testid="expense-distribution-other" style={ExpenseList.length==0?{width:"25%"}:{ width:  `${Math.floor(expenses.Shopping/totalExpenses*100)}%` }} className="orange"></div>
+					<div data-testid="expense-distribution-food" style={{width:`${colourPercent.lightblue}%`  }} className="lightblue"></div>
+					<div data-testid="expense-distribution-travel" style={{width:`${colourPercent.red}%`}} className="red"></div>
+					<div data-testid="expense-distribution-shopping" style={{width:`${colourPercent.lightgreen}%` }} className="lightgreen"></div>
+					<div data-testid="expense-distribution-other" style={{width:`${colourPercent.orange}%` }} className="orange"></div>
 				</div>
 				<br />
 				<div className="flex ml-10 mb-2">
